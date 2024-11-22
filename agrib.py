@@ -23,7 +23,7 @@ def init_db():
             id INT AUTO_INCREMENT PRIMARY KEY,
             soilMoisture INT NOT NULL,
             lightIntensity INT NOT NULL,
-            solarPower BOOLEAN NOT NULL,
+            motor BOOLEAN NOT NULL,
             daylight BOOLEAN NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -31,8 +31,8 @@ def init_db():
     conn.close()
 
 # Function to simulate irrigation control (triggering the water pump based on conditions)
-def control_irrigation(soil_moisture, light_intensity, daylight, solar_power):
-    if soil_moisture <= 30  and light_intensity <= 25000 and daylight and solar_power:  # Soil is dry, it's day, and solar power is available
+def control_irrigation(soil_moisture, light_intensity, daylight, motor):
+    if soil_moisture <= 30  and light_intensity <= 25000 and daylight and motor:  # Soil is dry, it's day, and solar power is available
         return "Irrigation started"
     else:
         return "Irrigation stopped"
@@ -42,21 +42,21 @@ def receive_data():
     data = request.get_json()
     soil_moisture = data.get('soilMoisture')
     light_intensity = data.get('lightIntensity')
-    solar_power = data.get('solarPower')
+    motor = data.get('motor')
     daylight = data.get('daylight')
 
     # Save data to the database
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO SensorData (soilMoisture, lightIntensity, solarPower, daylight)
+        INSERT INTO SensorData (soilMoisture, lightIntensity, motor, daylight)
         VALUES (%s, %s, %s, %s)
-    ''', (soil_moisture, light_intensity, solar_power, daylight))
+    ''', (soil_moisture, light_intensity, motor, daylight))
     conn.commit()
     conn.close()
 
     # Control irrigation based on received data
-    irrigation_status = control_irrigation(soil_moisture, light_intensity, daylight, solar_power)
+    irrigation_status = control_irrigation(soil_moisture, light_intensity, daylight, motor)
 
     return jsonify({
         "message": "Data received successfully",
